@@ -1,0 +1,24 @@
+{
+  "name": "fleet",
+  "version": "1.0.0",
+  "description": "deployment package for fleet of dnd websites",
+  "main": "index.js",
+  "scripts": {
+    "deploy:all": "node ./src/updateAllSites.js",
+    "deploy1d9": "node site.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.224.1",
+    "deploy": "file:../deploy",
+    "download-npm-package": "^3.1.12",
+    "lodash": "^4.17.5",
+    "merge-dirs": "^0.2.1",
+    "mime-types": "^2.1.18",
+    "mkdirp": "^0.5.1",
+    "nodegit": "^0.21.2",
+    "slash": "^2.0.0"
+  }
+}
