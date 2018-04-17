@@ -4,23 +4,12 @@
         "bucket": "1d9.tech",
         "partDescriptions": [
             {
-                "name": "basic-site"
+                "path": "./nextLevel",
+                "name": "basic-site",
+                "config": {
+                    "testConfigName": "testConfigValue"
+                }
             }
-        ],
-        "config": {
-            "testConfigName": "testConfigValue"
-        }
-    },
-    {
-        "name": "1d9",
-        "bucket": "admin.1d9.tech",
-        "partDescriptions": [
-            {
-                "name": "publish"
-            }
-        ],
-        "config": {
-            "editorTarget": "1d9.tech"
-        }
+        ]
     }
 ]

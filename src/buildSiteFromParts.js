@@ -1,34 +1,49 @@
-const s3 = require('./partResolvers/s3Resolver');
+const getS3Part = require('./parts/getS3Part');
+const buildConfig = require('./parts/buildConfig');
 const mergeDirs = require('merge-dirs').default;
-const mkdirp = require('mkdirp');
 
-const packageResolvers = {
-  s3,
+const { resolve } = require('path');
+const { partial } = require('lodash');
+
+const { makeDirectory, deleteDirectory } = require('./utils/file');
+const { simultanously } = require('./utils/functions');
+
+const parts = require('../parts.json');
+const [basicSite] = require('../sites.json');
+
+const getPart = (part, outputDirectory) => {
+  switch (part.package.type) {
+    case 's3':
+      return getS3Part(part.package.bucket, outputDirectory);
+  }
 };
 
-const getPackageResolver = packageType => packageResolvers[packageType];
+const getPartByDescription = description => parts.find(part => part.name === description.name);
 
-const buildSiteFromParts = (parts, dest) => (
-  Promise.all(
-    parts.map(part => {
-      const partDirectory = `${dest}/temp-packages/${part.name}`;
-      const resolver = getPackageResolver(part.package.type);
-      return resolver(part, partDirectory)
-        .then(() => partDirectory)
-        .catch(() => null);
-    })
-  )
-    .then(partDirectories => {
-      const destinationDirectory = `${dest}/destination`;
-      return new Promise(resolve => mkdirp(destinationDirectory, resolve))
-        .then(() => partDirectories
-          .filter(Boolean)
-          .forEach(
-            partDirectory => mergeDirs(partDirectory, destinationDirectory, 'overwrite')
-          ))
-        .then(() => destinationDirectory);
-    })
-    .catch(error => console.error('error', error))
+const mergeDescriptionWithPart = description => ({
+  ...description,
+  ...getPartByDescription(description),
+});
+
+const placePartInSite = (workspaceDirectory, siteDirectory, part) => {
+  const partTempDir = `${workspaceDirectory}/part-${part.name}`;
+  const partOutputDir = resolve(siteDirectory, part.path || '');
+  return getPart(part, partTempDir)
+    .then(() => buildConfig('config', part.config, partTempDir))
+    .then(() => makeDirectory(partOutputDir))
+    .then(() => mergeDirs(partTempDir, partOutputDir))
+    .then(() => deleteDirectory(partTempDir))
+    .then(() => part.name);
+};
+
+const buildSite = (site, workspaceDirectory, siteDirectory) => Promise.all(
+  site.partDescriptions
+    .map(mergeDescriptionWithPart)
+    .map(partial(placePartInSite, workspaceDirectory, siteDirectory))
 );
 
-module.exports = buildSiteFromParts;
+buildSite(basicSite, './workspace', './basic-site')
+  .then(console.log)
+  .catch(console.error);
+
+module.exports = buildSite;

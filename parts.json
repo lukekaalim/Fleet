@@ -1,10 +1,16 @@
 [
     {
         "name": "publish",
-        "package": { "type": "s3", "bucket": "worldhost.publish" }
+        "package": {
+            "type": "s3",
+            "bucket": "worldhost.part.publish"
+        }
     },
     {
         "name": "basic-site",
-        "package": { "type": "s3", "bucket": "worldhost.part.basic-site" }
+        "package": {
+            "type": "s3",
+            "bucket": "worldhost.part.basic-site"
+        }
     }
 ]
