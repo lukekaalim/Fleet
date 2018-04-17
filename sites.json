@@ -4,7 +4,6 @@
         "bucket": "1d9.tech",
         "partDescriptions": [
             {
-                "path": "./nextLevel",
                 "name": "basic-site",
                 "config": {
                     "testConfigName": "testConfigValue"

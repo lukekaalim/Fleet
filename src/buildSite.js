@@ -9,7 +9,6 @@ const { makeDirectory, deleteDirectory } = require('./utils/file');
 const { simultanously } = require('./utils/functions');
 
 const parts = require('../parts.json');
-const [basicSite] = require('../sites.json');
 
 const getPart = (part, outputDirectory) => {
   switch (part.package.type) {
@@ -41,9 +40,5 @@ const buildSite = (site, workspaceDirectory, siteDirectory) => Promise.all(
     .map(mergeDescriptionWithPart)
     .map(partial(placePartInSite, workspaceDirectory, siteDirectory))
 );
-
-buildSite(basicSite, './workspace', './basic-site')
-  .then(console.log)
-  .catch(console.error);
 
 module.exports = buildSite;

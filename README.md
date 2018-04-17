@@ -1,3 +1,3 @@
 # Fleet
 
-Deployment scripts to automate versioning of multiple servers.
+Deployment scripts to automate versioning of multiple s3 sites.

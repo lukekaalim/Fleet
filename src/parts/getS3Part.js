@@ -8,7 +8,10 @@ const { getBucket } = require('../utils/s3');
 const { makeDirectory } = require('../utils/file');
 
 const writeToFile = (directory, buffer) => new Promise(async (resolve, reject) =>
-  fs.writeFile(await makeDirectory(directory), buffer, error => error ? reject(error) : resolve(directory))
+  makeDirectory(dirname(directory))
+    .then(() =>
+      fs.writeFile(directory, buffer, error => error ? reject(error) : resolve(directory))
+    )
 );
 
 const mapObjectsToFile = (baseDir, { Key, Body }) => (

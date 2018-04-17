@@ -1,27 +1,45 @@
-const { resolve } = require('path');
-const { partialRight } = require('lodash');
+const { resolve, relative } = require('path');
+const slash = require('slash');
+const { contentType } = require('mime-types')
+const { tmpdir } = require('os');
 
-const allParts = require('../parts.json');
+const { putObject, clearBucket } = require('./utils/s3');
+const { getAllFilesInDirectory, getFileBuffer, deleteDirectory, makeDirectory } = require('./utils/file');
 
-const deployToS3 = require('./deployment/deployToS3');
-const buildSiteFromParts = require('./buildSiteFromParts');
-const buildConfig = require('./buildConfig');
+const buildSite = require('./buildSite');
 
-const getPartFromDescription = partDescription =>
-  allParts.find(part => part.name === partDescription.name);
+const [basicSite] = require('../sites.json');
 
-const getParts = site => site.partDescriptions.map(getPartFromDescription);
+const filePathToKey = (filePath, rootDirectory) => slash(relative(rootDirectory, filePath));
 
-const deploySite = ({ bucket, ...site }, workspace) => (
-  buildSiteFromParts(
-    getParts(site),
-    resolve(workspace),
-  )
-    .then(siteDirectory => {
-      buildConfig('config', site.config, siteDirectory);
-      return deployToS3(siteDirectory, bucket)
-    })
-    .catch(error => console.error(`Unable to deploy site: ${site.name}`, error))
+const putAllFilesInBucket = (directory, site) => Promise.all(
+  getAllFilesInDirectory(directory)
+    .map(filePath => getFileBuffer(filePath)
+      .then(buffer =>
+        putObject(
+          site.bucket,
+          filePathToKey(filePath, directory),
+          buffer,
+          contentType(filePath),
+        )
+      )
+    )
 );
+
+const deploySite = async (site) => {
+  const workspace = await makeDirectory(resolve(tmpdir(), './fleet/workspace'));
+  const siteDirectory = await makeDirectory(resolve(tmpdir(), `./fleet/${site.name}`));
+  return Promise.all([
+    clearBucket(site.bucket),
+    buildSite(site, workspace, siteDirectory)
+  ])
+    .then(() => putAllFilesInBucket(siteDirectory, site))
+    .catch(console.error)
+    .then(() => deleteDirectory(workspace))
+    .then(() => deleteDirectory(siteDirectory));
+};
+
+deploySite(basicSite)
+  .then(console.log);
 
 module.exports = deploySite;
